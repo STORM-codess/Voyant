@@ -1,0 +1,18 @@
+<svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- rounded square background in forest green -->
+  <rect width="64" height="64" rx="15" fill="#2F5D50"/>
+  <!-- subtle inner gradient sheen -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3A6E5E"/>
+      <stop offset="1" stop-color="#21443A"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#g)"/>
+  <!-- V monogram: two strokes meeting at a point, gold -->
+  <path d="M16 18 L32 46 L48 18"
+        fill="none" stroke="#E0A458" stroke-width="6"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- small gold dot above the V's vertex = a 'destination pin' nod -->
+  <circle cx="32" cy="13" r="3.2" fill="#F0C97E"/>
+</svg>
