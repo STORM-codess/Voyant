@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Trophy, X, LogOut } from "lucide-react";
+import { ArrowLeft, Trophy, X, LogOut, Share2 } from "lucide-react";
 import { api } from "./api";
 import { useAuth } from "./AuthContext";
 import FormTab from "./FormTab";
@@ -287,6 +287,8 @@ export default function VoyantTripDetail() {
   const [trip, setTrip] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [joining, setJoining] = useState(false);
+  const [shareMsg, setShareMsg] = useState("");
 
   useEffect(() => {
     let alive = true;
@@ -327,6 +329,37 @@ export default function VoyantTripDetail() {
 
   const members = trip.members || [];
   const isAdmin = members.some((m) => m.user_id === profile?.id && m.is_admin);
+  const isMember = members.some((m) => m.user_id === profile?.id);
+
+  const tripLink = `${window.location.origin}/trip/${id}`;
+
+  const handleJoin = async () => {
+    setJoining(true);
+    try {
+      await api.post(`/trips/${id}/join`);
+      await reloadTrip();
+    } catch {
+      setJoining(false);
+    }
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: `Join ${trip.name} on Voyant`,
+      text: `Join my trip "${trip.name}" on Voyant — help pick where we go!`,
+      url: tripLink,
+    };
+    if (navigator.share) {
+      try { await navigator.share(shareData); return; } catch { return; }
+    }
+    try {
+      await navigator.clipboard.writeText(tripLink);
+      setShareMsg("Link copied!");
+      setTimeout(() => setShareMsg(""), 2000);
+    } catch {
+      setShareMsg(tripLink);
+    }
+  };
 
   return (
     <div style={{ background: C.cream, minHeight: "100vh", fontFamily: "'Inter', system-ui, sans-serif", padding: "28px 40px 60px" }}>
@@ -344,14 +377,31 @@ export default function VoyantTripDetail() {
           <h1 style={{ font: "600 2.4rem 'Fraunces', serif", color: C.forest, margin: "4px 0 6px" }}>{trip.name}</h1>
           <div style={{ font: "400 0.92rem 'Inter'", color: C.textSoft }}>{trip.trip_date ? new Date(trip.trip_date).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" }) : "Dates to be decided"}</div>
         </div>
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <div style={{ display: "flex" }}>
             {members.map((m, i) => (
               <div key={m.user_id || i} style={{ marginLeft: i ? -10 : 0 }}><div style={{ border: "2.5px solid " + C.cream, borderRadius: 99 }}><Avatar m={m} size={38} /></div></div>
             ))}
           </div>
+          {isMember && (
+            <button onClick={handleShare} title="Share invite link" style={{ border: `1.5px solid ${C.forest}`, background: "transparent", color: C.forest, font: "700 0.82rem 'Inter'", padding: "9px 16px", borderRadius: 99, cursor: "pointer", display: "flex", alignItems: "center", gap: 7 }}>
+              <Share2 size={15} /> {shareMsg || "Share invite"}
+            </button>
+          )}
         </div>
       </div>
+
+      {/* non-member who opened a shared link → offer to join */}
+      {!isMember && (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", background: C.forest, color: "#fff", borderRadius: 16, padding: "16px 22px", marginBottom: 24 }}>
+          <div style={{ font: "500 0.95rem 'Inter'" }}>
+            You've been invited to <strong>{trip.name}</strong>. Join to add your preferences and vote.
+          </div>
+          <button onClick={handleJoin} disabled={joining} style={{ border: "none", background: C.gold, color: C.forestDeep || "#21443A", font: "700 0.88rem 'Inter'", padding: "11px 24px", borderRadius: 99, cursor: joining ? "default" : "pointer", whiteSpace: "nowrap" }}>
+            {joining ? "Joining…" : "Join trip"}
+          </button>
+        </div>
+      )}
 
       {/* tabs */}
       <div style={{ display: "flex", gap: 6, borderBottom: `1px solid ${C.line}`, marginBottom: 26 }}>
